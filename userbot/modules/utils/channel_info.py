@@ -17,16 +17,24 @@ class ChannelInfoCommand(Command):
         client: TelegramClient = event.client
         if event.is_private:
             return
-        chat_info = Section(Bold(f'Info for {chat.title}:'),
+
+        chat_id = int(f"-100{event.chat.id}")
+
+        if (isinstance(chat, Channel)):
+            chat_info = Section(Bold(f'{chat.title}:'),
                             KeyValueItem(Bold('title'), Code(chat.title)),
-                            KeyValueItem(Bold('chat_id'), Code(event.chat.id)),
-                            KeyValueItem(Bold('access_hash'), Code(chat.access_hash)),
+                            KeyValueItem(Bold('chat_id'), Code(chat_id)),
                             KeyValueItem(Bold('creator'), Code(chat.creator)),
-                            KeyValueItem(Bold('broadcast'), Code(chat.broadcast)),
                             KeyValueItem(Bold('megagroup'), Code(chat.megagroup)),
                             KeyValueItem(Bold('min'), Code(chat.min)),
                             KeyValueItem(Bold('username'), Code(chat.username)),
                             KeyValueItem(Bold('verified'), Code(chat.verified)),
+                            KeyValueItem(Bold('version'), Code(chat.version)))
+        else:
+            chat_info = Section(Bold(f'{chat.title}:'),
+                            KeyValueItem(Bold('title'), Code(chat.title)),
+                            KeyValueItem(Bold('chat_id'), Code(chat_id)),
+                            KeyValueItem(Bold('creator'), Code(chat.creator)),
                             KeyValueItem(Bold('version'), Code(chat.version)))
 
         bot_accounts = 0

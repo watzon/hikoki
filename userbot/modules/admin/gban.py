@@ -13,12 +13,11 @@ class GBanCommand(Command):
 
     async def exec(self, event):
         gban_chats = Chat.objects(gban_enabled=True) # pylint: disable=no-member
-        print(gban_chats.to_json())
+        reason = event.pattern_match.groups()[0] or ""
 
         for gbchat in gban_chats:
             bancommand = gbchat.gban_command
-            maybe_user = event.pattern_match.groups()[0]
-            user_full = await get_user_from_event(event, user=maybe_user)
-            await event.client.send_message(gbchat.chat_id, f"{bancommand} {user_full.user.id}")
+            user_full = await get_user_from_event(event)
+            await event.client.send_message(gbchat.chat_id, f"{bancommand} {user_full.user.id} {reason}")
 
         await event.delete()

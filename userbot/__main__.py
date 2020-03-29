@@ -8,7 +8,7 @@ from importlib import import_module
 from mongoengine import DoesNotExist
 
 from telethon import events
-from telethon.tl.types import InputPeerChannel, InputPeerChat
+from telethon.tl.types import InputPeerChannel, InputPeerChat, PeerChannel, PeerChat, UpdateNewMessage
 from telethon.errors.rpcerrorlist import PhoneNumberInvalidError
 from telethon.tl.functions.channels import GetFullChannelRequest
 from telethon.tl.functions.messages import GetFullChatRequest
@@ -24,36 +24,31 @@ def signal_handler(sig, frame):
     sys.exit(0)
 
 async def update_chat(update):
-    chat_ids = set([])
+    if isinstance(update.to_id, PeerChannel):
+        to_id = update.to_id.channel_id
+        to_id = int(f"-100{to_id}")
+    elif isinstance(update.to_id, PeerChat):
+        to_id = update.to_id.chat_id
+    else: return
 
-    if hasattr(update, 'chat_id'):
-        chat_ids.add(update.chat_id)
+    try:
+        Chat.objects(chat_id=to_id).get()
+    except DoesNotExist:
+        input_entity = await bot.get_input_entity(to_id)
 
-    if hasattr(update, 'message') and hasattr(update.message, 'chat_id'):
-        chat_ids.add(update.message.chat_id)
+        if isinstance(input_entity, InputPeerChannel):
+            ent = await bot(GetFullChannelRequest(input_entity.channel_id))
+        elif isinstance(input_entity, InputPeerChat):
+            ent = await bot(GetFullChatRequest(input_entity.chat_id))
+        else: return
 
-    for chat_id in chat_ids:
-        try:
-            # pylint: disable=no-member
-            Chat.objects(chat_id=chat_id).get()
-        except DoesNotExist:
-            input_entity = await bot.get_input_entity(chat_id)
-
-            if isinstance(input_entity, InputPeerChannel):
-                ent = await bot(GetFullChannelRequest(input_entity.channel_id))
-            elif isinstance(input_entity, InputPeerChat):
-                ent = await bot(GetFullChatRequest(input_entity.chat_id))
-
-            if ent:
-                for _chat in ent.chats:
-                    logging.debug("Found new chat with id %d.", _chat.id)
-                    try:
-                        title = _chat.title
-                        chat = Chat(chat_id=_chat.id, title=title)
-                        chat.save()
-                        logging.debug("Saved chat %d to db successfully.", _chat.id)
-                    except BaseException:
-                        pass
+        for chat in ent.chats:
+            try:
+                id = int(f"-100{chat.id}")
+                Chat(chat_id=id, title=chat.title).save()
+                logging.debug("Saved new chat with id %d.", id)
+            except BaseException:
+                pass
 
 async def main():
     try:
@@ -68,7 +63,7 @@ async def main():
     logging.info("Your bot lives! You can validate this by running the .alive command.")
 
     # Keep track of chats
-    bot.add_event_handler(update_chat, events.Raw)
+    bot.add_event_handler(update_chat, events.NewMessage)
 
     # Tell the user the bot has been restarted
     if LOG_CHAT_ID:

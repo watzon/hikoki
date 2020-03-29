@@ -93,8 +93,7 @@ async def get_user_from_event(event: NewMessage.Event, **kwargs):
     # Check for a forwarded message
     elif (reply_msg and
           reply_msg.forward and
-          reply_msg.forward.sender_id and
-          kwargs['forward']):
+          reply_msg.forward.sender_id):
         forward = reply_msg.forward
         replied_user = await event.client(GetFullUserRequest(forward.sender_id))
 

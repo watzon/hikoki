@@ -12,16 +12,15 @@ class BanCommand(Command):
     category = "admin"
 
     async def exec(self, event):
-        chat = event.chat
-        dbchat = Chat.objects(chat_id=chat.id).get() # pylint: disable=no-member
+        dbchat = Chat.objects(chat_id=event.chat_id).get() # pylint: disable=no-member
         bancommand = dbchat.ban_command
+        reason = event.pattern_match.groups()[0] or ""
 
         if event.reply_to_msg_id:
             reply = event.reply_to_msg_id
-            await event.respond(bancommand, reply_to=reply)
+            await event.respond(f"{bancommand} {reason}", reply_to=reply)
         else:
-            maybe_user = event.pattern_match.groups()[0]
-            user_full = await get_user_from_event(event, user=maybe_user)
-            await event.respond(f"{bancommand} {user_full.user.id}")
+            user_full = await get_user_from_event(event)
+            await event.respond(f"{bancommand} {user_full.user.id} {reason}")
 
         await event.delete()
