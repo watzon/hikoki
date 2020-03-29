@@ -58,22 +58,34 @@ class Command(ABC):
 
     @abstractmethod
     async def exec(self, event: NewMessage):
-        pass
+        """This is the method that gets called when the command is matched."""
 
     @classmethod
     def on_register(cls, client: TelegramClient):
-        pass
+        """This gets called the first time the command is registered.
+        Use it to do any setup."""
 
     @classmethod
     def help(cls):
-        help_text = re.sub("\s+", " ", cls.__doc__)
+        """Return the help text for this command."""
+        help_text = re.sub(r"\s+", " ", cls.__doc__)
         usage = cls._build_usage()
         return f"**{cls.category}.{cls.command}**\n" \
                f"`{usage}`\n\n" \
                f"{help_text}"
 
     @classmethod
+    def command_pattern(cls):
+        """Returns the match pattern for this command."""
+        aliases = cls.aliases or []
+        aliases.insert(0, cls.command)
+        command = '(?:' + '|'.join(aliases) + ')'
+        pattern = '(?i)^' + re.escape(cls.prefix) + command + r'(\s+[\S\s]+)?$'
+        return pattern
+
+    @classmethod
     def subclasses(cls):
+        """Gets all subclasses for this command."""
         return set(cls.__subclasses__()).union(
             [s for c in cls.__subclasses__() for s in c.subclasses()])
 
@@ -83,10 +95,7 @@ class Command(ABC):
 
 def register(cls: Command.__class__):
     """Register a new `Command`"""
-    aliases = cls.aliases or []
-    aliases.insert(0, cls.command)
-    command = '(?:' + '|'.join(aliases) + ')'
-    pattern = '(?i)^' + cls.prefix + command + r'\s*([\S\s]+)?$'
+    pattern = cls.command_pattern()
     args = {'pattern': pattern, 'incoming': cls.incoming}
 
     async def decorator(check: Message):

@@ -43,16 +43,17 @@ async def update_chat(update):
                 ent = await bot(GetFullChannelRequest(input_entity.channel_id))
             elif isinstance(input_entity, InputPeerChat):
                 ent = await bot(GetFullChatRequest(input_entity.chat_id))
-            else:
-                return
 
-            for chat in ent.chats:
-                try:
-                    title = chat.title
-                    chat = Chat(chat_id=chat_id, title=title)
-                    chat.save()
-                except BaseException:
-                    pass
+            if ent:
+                for _chat in ent.chats:
+                    logging.debug("Found new chat with id %d.", _chat.id)
+                    try:
+                        title = _chat.title
+                        chat = Chat(chat_id=_chat.id, title=title)
+                        chat.save()
+                        logging.debug("Saved chat %d to db successfully.", _chat.id)
+                    except BaseException:
+                        pass
 
 async def main():
     try:

@@ -3,7 +3,7 @@ from datetime import datetime
 from userbot.commands import Command, register
 
 @register
-class AliveCommand(Command):
+class PingCommand(Command):
     """See how long it takes for a request to hit the server."""
 
     command = "ping"
@@ -15,5 +15,3 @@ class AliveCommand(Command):
         end = datetime.now()
         duration = (end - start).microseconds / 1000
         await event.edit("`Pong!\n%sms`" % duration)
-
-
