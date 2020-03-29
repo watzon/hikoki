@@ -6,8 +6,10 @@ class Chat(Document):
     kind = StringField()
     bot_disabled = BooleanField(default=False)
 
+    ban_command = StringField(default="/ban")
+
     gban_enabled = BooleanField(default=False)
-    gban_command = StringField(default="/gban")
+    gban_command = StringField(default="/ban")
 
     fban_enabled = BooleanField(default=False)
     fban_command = StringField(default="/fban")
