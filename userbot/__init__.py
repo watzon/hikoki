@@ -1,6 +1,7 @@
 import sys
 import logging
 
+import spamwatch
 import mongoengine
 import coloredlogs
 from dotenv import load_dotenv
@@ -20,6 +21,8 @@ LOG_FORMAT = env.get("LOG_FORMAT", "%(asctime)s %(name)s %(levelname)s %(message
 COMMAND_PREFIX = env.get("COMMAND_PREFIX", ".")
 MONGO_DB_URI = env.get("MONGO_DB_URI", None)
 MONGO_DB_NAME = env.get("MONGO_DB_NAME", "userbot")
+SPAMWATCH_HOST = env.get("SPAMWATCH_HOST", None)
+SPAMWATCH_API_KEY = env.get("SPAMWATCH_API_KEY", None)
 
 # Set up logging
 _log_level = logging._nameToLevel[LOG_LEVEL] # pylint: disable=protected-access
@@ -41,6 +44,12 @@ def is_mongo_alive():
 
 # Set up redis
 # TODO
+
+# Set up SpamWatch
+if SPAMWATCH_API_KEY:
+    spamwatch = spamwatch.Client(SPAMWATCH_API_KEY, host=SPAMWATCH_HOST)
+else:
+    spamwatch = None
 
 # Create the bot
 bot = TelegramClient(SESSION, API_ID, API_HASH)

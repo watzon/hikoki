@@ -1,3 +1,4 @@
+import re
 import sys
 from abc import ABC, abstractmethod
 import asyncio
@@ -5,10 +6,12 @@ import logging
 import traceback
 from time import gmtime, strftime
 
-from telethon import TelegramClient, events
+from telethon import TelegramClient
+from telethon.events import NewMessage, MessageEdited
 from telethon.tl.custom.message import Message
 
 from userbot import bot, LOG_CHAT_ID, COMMAND_PREFIX
+from userbot.db import Chat
 
 class Command(ABC):
     """This is the base `Command` class for other commands
@@ -20,6 +23,11 @@ class Command(ABC):
 
     #: The command itself, without the prefix.
     command: str = NotImplemented
+
+    #: Aliases for the command. Order matters. When matched,
+    #: these will be joined in a regular expression with
+    #: `command` like `(?:command|alias1|alias2)`.
+    aliases: [str] = None
 
     #: The category to add this command to. Defaults
     #: to 'uncategorized'.
@@ -40,23 +48,28 @@ class Command(ABC):
     #: but not by you.
     incoming: bool = False
 
+    #: If `True`, this command will still work in groups
+    #: where the bot is disabled.
+    disable_override: bool = False
+
     def __init__(self):
         # TODO: handle transforming pattern_match into arguments
         pass
 
     @abstractmethod
-    async def exec(self, event):
+    async def exec(self, event: NewMessage):
         pass
 
-    async def on_register(self, client: TelegramClient):
+    @classmethod
+    def on_register(cls, client: TelegramClient):
         pass
 
     @classmethod
     def help(cls):
-        help_text = cls.__doc__
+        help_text = re.sub("\s+", " ", cls.__doc__)
         usage = cls._build_usage()
-        return f"**{cls.category}.{cls.command}**\n\n" \
-               f"Usage: `{usage}`\n\n" \
+        return f"**{cls.category}.{cls.command}**\n" \
+               f"`{usage}`\n\n" \
                f"{help_text}"
 
     @classmethod
@@ -70,15 +83,24 @@ class Command(ABC):
 
 def register(cls: Command.__class__):
     """Register a new `Command`"""
-    command = '(?i)^' + cls.prefix + cls.command
-    args = {'pattern': command, 'incoming': cls.incoming}
+    aliases = cls.aliases or []
+    aliases.insert(0, cls.command)
+    command = '(?:' + '|'.join(aliases) + ')'
+    pattern = '(?i)^' + cls.prefix + command + r'\s*([\S\s]+)?$'
+    args = {'pattern': pattern, 'incoming': cls.incoming}
 
     async def decorator(check: Message):
+        # pylint: disable=no-member
+        db_chat = Chat.objects(chat_id=check.chat_id).first()
+        if db_chat and db_chat.bot_disabled and not cls.disable_override:
+            return
+
         if cls.group_only and not check.is_group():
             logging.warning(
                 "Attempted to call method marked as group_only"
                 "in a non-group setting.")
             return
+
         if cls.incoming and not check.out:
             await cls().exec(check)
             return
@@ -87,12 +109,12 @@ def register(cls: Command.__class__):
             await cls().exec(check)
         except KeyboardInterrupt:
             pass
-        except BaseException as ex:
+        except BaseException as err:
             # Do some error handling. In the future we may make this more configurable,
             # but for now we just send a file to the log chat.
 
             # Log the error
-            logging.error(ex)
+            logging.error(err)
 
             if not cls.disable_errors and LOG_CHAT_ID != "":
                 date = strftime("%Y-%m-%d %H:%M:%S", gmtime())
@@ -140,6 +162,8 @@ def register(cls: Command.__class__):
             pass
 
     if not cls.disable_edited:
-        bot.add_event_handler(decorator, events.MessageEdited(**args))
-    bot.add_event_handler(decorator, events.NewMessage(**args))
+        bot.add_event_handler(decorator, MessageEdited(**args))
+    bot.add_event_handler(decorator, NewMessage(**args))
+
+    cls.on_register(bot)
     return decorator

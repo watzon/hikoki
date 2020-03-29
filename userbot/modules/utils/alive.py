@@ -17,7 +17,7 @@ class AliveCommand(Command):
         username = (await bot.get_me()).username
 
         if is_mongo_alive():
-            database_status = "working correctly"
+            database_status = "running"
         else:
             database_status = "failing :("
 

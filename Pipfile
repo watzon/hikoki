@@ -18,6 +18,8 @@ coloredlogs = "*"
 pymongo = "*"
 dnspython = "*"
 mongoengine = "*"
+photohash = "*"
+spamwatch = "*"
 
 [requires]
 python_version = "3.7"

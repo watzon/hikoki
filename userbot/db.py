@@ -6,10 +6,8 @@ class Chat(Document):
     kind = StringField()
     bot_disabled = BooleanField(default=False)
 
-class GBanChat(Document):
-    chat_id = IntField(primary_key=True, required=True)
-    command = StringField(default="/gban")
+    gban_enabled = BooleanField(default=False)
+    gban_command = StringField(default="/gban")
 
-class FBanChat(Document):
-    chat_id = IntField(primary_key=True, required=True)
-    command = StringField(default="/fban")
+    fban_enabled = BooleanField(default=False)
+    fban_command = StringField(default="/fban")

@@ -1,5 +1,5 @@
 from re import findall, match
-from typing import List
+from typing import Union, List
 
 from telethon.events import NewMessage
 from telethon.tl.custom import Message
@@ -37,7 +37,7 @@ def parse_arguments(message: str, valid: List[str]) -> (dict, str):
     return options, message.strip()
 
 
-def freeze(collection: dict|list):
+def freeze(collection: Union[dict, list]):
     if isinstance(collection, dict):
         return frozenset((key, freeze(value)) for key, value in collection.items())
     elif isinstance(collection, list):

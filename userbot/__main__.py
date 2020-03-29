@@ -41,17 +41,15 @@ async def update_chat(update):
 
             if isinstance(input_entity, InputPeerChannel):
                 ent = await bot(GetFullChannelRequest(input_entity.channel_id))
-                kind = "channel"
             elif isinstance(input_entity, InputPeerChat):
                 ent = await bot(GetFullChatRequest(input_entity.chat_id))
-                kind = "chat"
             else:
                 return
 
             for chat in ent.chats:
                 try:
                     title = chat.title
-                    chat = Chat(chat_id=chat_id, title=title, kind=kind)
+                    chat = Chat(chat_id=chat_id, title=title)
                     chat.save()
                 except BaseException:
                     pass
