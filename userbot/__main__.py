@@ -14,6 +14,7 @@ from telethon.tl.functions.channels import GetFullChannelRequest
 from telethon.tl.functions.messages import GetFullChatRequest
 
 from userbot.db import Chat
+from userbot.commands import Command
 from userbot import bot, LOG_CHAT_ID
 from userbot.modules import ALL_MODULES
 from userbot.messages import INVALID_PHONE, BOT_RESTARTED
