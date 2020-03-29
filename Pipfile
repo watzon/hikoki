@@ -1,0 +1,23 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+python-dotenv = ">=0.12.0"
+pylint = "*"
+autopep8 = "*"
+
+[packages]
+cryptg = ">=0.2"
+aiohttp = ">=3.6.2"
+hachoir = ">=3.1.1"
+Telethon = ">=1.11.3"
+Pillow = ">=7.0.0"
+coloredlogs = "*"
+pymongo = "*"
+dnspython = "*"
+mongoengine = "*"
+
+[requires]
+python_version = "3.7"
