@@ -14,18 +14,30 @@ class Command(ABC):
     """This is the base `Command` class for other commands
     to inherit from."""
 
+    #: The prefix to use for the command, defaults
+    #: to the value of `COMMAND_PREFIX`.
     prefix: str = COMMAND_PREFIX
 
+    #: The command itself, without the prefix.
     command: str = NotImplemented
 
-    category: str = NotImplemented
+    #: The category to add this command to. Defaults
+    #: to 'uncategorized'.
+    category: str = "uncategorized"
 
+    #: If `True`, will not call this again if a
+    #: message is edited.
     disable_edited: bool = False
 
+    #: If `True`, this command will only work in groups.
     group_only: bool = False
 
+    #: Disables error reporting for this command
+    #: if something goes wrong.
     disable_errors: bool = False
 
+    #: If `True`, this command will be usable by others,
+    #: but not by you.
     incoming: bool = False
 
     def __init__(self):
