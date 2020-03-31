@@ -5,13 +5,13 @@ Hikōki is a Telegram userbot meant for group management, spam handling, and occ
 
 ## Requirements
 
-- [x] Python 3
-- [x] pipenv (`pip3 install pipenv`)
-- [x] Server running MongoDB
+* Python 3
+* pipenv (`pip3 install pipenv`)
+* Server running MongoDB
 
 Optionally:
 
-- [x] Docker/Podman
+* Docker/Podman
 
 ## Installation
 
