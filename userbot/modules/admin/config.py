@@ -63,10 +63,10 @@ class config(Command):
                     fbchat.gban_enabled = boolean
                     fbchat.save()
                     status = "enabled" if boolean else "disabled"
-                    await event.reply(f"Gbans {status} for chat `{chat_id}`.")
+                    await event.reply(f"Gbans `{status}` for chat `{chat_id}`.")
                 else:
                     status = "enabled" if fbchat.fban_enabled else "disabled"
-                    await event.reply(f"Gbans are {status} for chat `{chat_id}`.")
+                    await event.reply(f"Gbans are `{status}` for chat `{chat_id}`.")
             elif option == "fbans":
                 fbchat = Chat.objects(chat_id=chat_id).get()
                 if newvalue:
@@ -76,10 +76,23 @@ class config(Command):
                     fbchat.fban_enabled = boolean
                     fbchat.save()
                     status = "enabled" if boolean else "disabled"
-                    await event.reply(f"Fbans {status} for chat `{chat_id}`.")
+                    await event.reply(f"Fbans `{status}` for chat `{chat_id}`.")
                 else:
                     status = "enabled" if fbchat.fban_enabled else "disabled"
-                    await event.reply(f"Fbans are {status} for chat `{chat_id}`.")
+                    await event.reply(f"Fbans are `{status}` for chat `{chat_id}`.")
+            elif option == "blacklist":
+                echat = Chat.objects(chat_id=chat_id).get()
+                if newvalue:
+                    boolean = self.str_to_bool(newvalue)
+                    if boolean is None:
+                        return await event.reply(f"Invalid value `{newvalue}` for option `blacklist`.")
+                    echat.bot_enabled = boolean
+                    echat.save()
+                    status = "enabled" if boolean else "disabled"
+                    await event.reply(f"Bot `{status}` for chat `{chat_id}`.")
+                else:
+                    status = "enabled" if echat.fban_enabled else "disabled"
+                    await event.reply(f"Bot is currenty `{status}` in chat `{chat_id}`.")
             else:
                 close = difflib.get_close_matches(option, options)
                 if len(close) > 0:

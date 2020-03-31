@@ -1,17 +1,22 @@
 import sys
 import logging
+from os import path, environ as env
 
 import spamwatch
 import mongoengine
 import coloredlogs
-from dotenv import load_dotenv
-from os import path, environ as env
 from telethon import TelegramClient
+from telethon.sessions import StringSession
+
 
 # Setup environment variables
-load_dotenv()
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except BaseException:
+    pass
 
-SESSION = path.join(env.get("SESSION_DIR", "./"), "userbot")
+SESSION = path.join(env.get("SESSION", None))
 API_ID = env.get("API_ID", None)
 API_HASH = env.get("API_HASH", None)
 LOG_CHAT_ID = int(env.get("LOG_CHAT_ID")) if env.get("LOG_CHAT_ID") else None
@@ -52,4 +57,4 @@ else:
     spamwatch = None
 
 # Create the bot
-bot = TelegramClient(SESSION, API_ID, API_HASH)
+bot = TelegramClient(StringSession(SESSION), API_ID, API_HASH)

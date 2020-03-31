@@ -1,5 +1,7 @@
 from telethon.errors import UsernameInvalidError, UsernameNotOccupiedError, InviteHashInvalidError
 
+SPAMWATCH_CHAT_ID = -1001312712379
+
 TELEGRAM_DOMAINS = ['t.me',
                     'telegram.org',
                     'telegram.dog',
