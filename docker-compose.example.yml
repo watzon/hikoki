@@ -1,48 +1,8 @@
-version: '3.1'
+version: '3.5'
 
 services:
-  mongo:
-    image: mongo
-    restart: always
-    env_file: .env
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: password
-    healthcheck:
-      test:  ["CMD", "docker-healthcheck"]
-      interval: 10s
-      timeout: 2s
-      retries: 10
-    networks:
-      - mongonet
-
-  mongo-express:
-    image: mongo-express
-    restart: always
-    env_file: .env
-    ports:
-      - 8081:8081
-    environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
-      ME_CONFIG_MONGODB_ADMINPASSWORD: password
-    depends_on:
-      mongo:
-        condition: service_healthy
-    networks:
-      - mongonet
-
   bot:
     build: .
     restart: always
-    env_file: .env
-    links:
-      - mongo
-    depends_on:
-      mongo:
-      condition: service_healthy
-    networks:
-      - mongonet
-
-networks:
-  mongonet:
-    driver: bridge
+    env_file:
+      - .env

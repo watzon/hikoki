@@ -78,14 +78,6 @@ The ID of the chat that you want to log things in. You can get this with a bot l
 
 The session generated above in step 4 of the installation process.
 
-### `MONGO_DB_URI`
-
-The connection URI for your MongoDB instance. You can create a free databse using [MongoDB Atlas](https://www.mongodb.com/cloud/atlas).
-
-### `MONGO_DB_NAME`
-
-The name of the database.
-
 ### `COMMAND_PREFIX`
 
 The prefix to use for commands. Defaults to `.` (period) if this variable isn't set.
@@ -105,3 +97,27 @@ The host to use for the [SpamWatch](https://spamwat.ch) API.
 ### `SPAMWATCH_API_KEY`
 
 API key for SpamWatch.
+
+### MONGO_DB
+
+The name of the mongo database to use for session storage and storing other things.
+
+### MONGO_USER
+
+The name of the user to sign into mongo as.
+
+### MONGO_PASS
+
+The password for the mongo user. Right now there's no way to authenticate without a password.
+
+### MONGO_HOST
+
+The host for the mongo instance. If you're running locally this would probably be `127.0.0.1`
+
+### MONGO_PORT
+
+The port for the mongo instance.
+
+### MONGO_AUTH_DB
+
+If enabled, you may need to include an `authSource` parameter for your connection. Set this to the auth db.

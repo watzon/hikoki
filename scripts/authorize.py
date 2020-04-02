@@ -6,6 +6,8 @@
 # information as well.
 
 from os import environ as env
+import mongoengine
+from telemongo import MongoSession
 from telethon import TelegramClient
 from telethon.sessions import StringSession
 
@@ -18,7 +20,18 @@ except BaseException:
 API_ID = env.get("API_ID", None)
 API_HASH = env.get("API_HASH", None)
 
-with TelegramClient(StringSession(), API_ID, API_HASH) as client:
-    print("Here's your session key. Place this in your .env file as " \
-        "SESSION or expose a SESSION environment variable in another way.")
-    print(client.session.save())
+MONGO_DB = env.get("MONGO_DB", "hikoki")
+MONGO_USER = env.get("MONGO_USER", "hikoki")
+MONGO_PASS = env.get("MONGO_PASS", "hikoki")
+MONGO_HOST = env.get("MONGO_HOST", "127.0.0.1")
+MONGO_PORT = env.get("MONGO_PORT", 27017)
+MONGO_AUTH_DB = env.get("MONGO_AUTH_DB", None)
+
+auth_source = f"?authSource={MONGO_AUTH_DB}" if MONGO_AUTH_DB else ""
+MONGO_URI = f"mongodb://{MONGO_USER}:{MONGO_PASS}@{MONGO_HOST}:{MONGO_PORT}/{MONGO_DB}{auth_source}"
+
+# Set up the database
+MONGO_CONNECTION = mongoengine.connect(MONGO_DB, host=MONGO_URI)
+
+with TelegramClient(MongoSession(MONGO_DB, host=MONGO_URI), API_ID, API_HASH) as client:
+    client.start()

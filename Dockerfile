@@ -2,6 +2,8 @@ FROM python:3
 
 WORKDIR /usr/src/app
 
+RUN apt update
+RUN apt install -y netcat
 RUN pip install pipenv
 
 COPY Pipfile .
@@ -11,4 +13,7 @@ RUN pipenv install
 
 COPY . .
 
-CMD ["pipenv", "run", "python", "-m", "userbot"]
+ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.2.1/wait /wait
+RUN chmod +x /wait
+
+CMD pipenv run python -m userbot

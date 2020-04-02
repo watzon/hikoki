@@ -6,9 +6,10 @@ from telethon.tl.custom import Message
 from telethon.tl.functions.channels import GetFullChannelRequest
 from telethon.tl.functions.messages import GetFullChatRequest
 from telethon.tl.functions.users import GetFullUserRequest
-from telethon.tl.types import (MessageEntityMentionName, ChannelParticipantsAdmins,
+from telethon.tl.types import (PeerUser, MessageEntityMentionName, ChannelParticipantsAdmins,
                                ChannelParticipantsBots, InputPeerChannel, InputPeerChat)
 
+from userbot import bot, LOG_CHAT_ID
 
 def parse_arguments(message: str, valid: List[str]) -> (dict, str):
     options = {}
@@ -75,19 +76,17 @@ async def get_user_from_event(event: NewMessage.Event, **kwargs):
 
         # Then check for a user mention (@username)
         elif event.message.entities is not None:
-            probable_user_mention_entity = event.message.entities[0]
-
-            if isinstance(probable_user_mention_entity,
-                          MessageEntityMentionName):
-                user_id = probable_user_mention_entity.user_id
-                replied_user = await event.client(GetFullUserRequest(user_id))
-                return replied_user
+            for entity in event.message.entities:
+                if isinstance(entity, MessageEntityMentionName):
+                    user_id = entity.user_id
+                    replied_user = await event.client(GetFullUserRequest(user_id))
+                    return replied_user
 
         try:
-            user_object = await event.client.get_entity(user)
-            replied_user = await event.client(
-                GetFullUserRequest(user_object.id))
-        except (TypeError, ValueError):
+            user_object = await event.client.get_input_entity(user)
+            replied_user = await event.client(GetFullUserRequest(user_object.id))
+        except (TypeError, ValueError) as err:
+            print(err)
             return None
 
     # Check for a forwarded message
@@ -161,3 +160,6 @@ def user_full_name(user):
     names = [i for i in list(names) if i]
     full_name = ' '.join(names)
     return full_name
+
+async def log_message(message, **kwargs):
+    return await bot.send_message(LOG_CHAT_ID, message, **kwargs)

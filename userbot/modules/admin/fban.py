@@ -1,6 +1,8 @@
+import re
+
 from userbot import spamwatch
 from userbot.db import Chat
-from userbot.utils import get_user_from_event
+from userbot.utils import get_user_from_event, log_message, parse_arguments
 from userbot.commands import Command, register
 from userbot.utils.constants import SPAMWATCH_CHAT_ID
 
@@ -15,20 +17,37 @@ class FBanCommand(Command):
 
     async def exec(self, event):
         fban_chats = Chat.objects(fban_enabled=True) # pylint: disable=no-member
-        reason = event.pattern_match.groups()[0] or ""
-        user_full = await get_user_from_event(event)
 
-        await event.delete()
+        args, maybe_user = parse_arguments(event.pattern_match.group(1), [ 'user', 'reason' ])
+        parts = re.split(r'\s+', maybe_user, 1)
+        args['user'] = args.get('user') or parts[0]
 
-        if "spam" in reason:
-            try:
-                spamwatch.add_ban(user_full.user.id, reason)
-            except BaseException:
-                pass
-            reply_message = await event.get_reply_message()
-            if (event.chat_id != SPAMWATCH_CHAT_ID) and reply_message:
-                await reply_message.forward_to(SPAMWATCH_CHAT_ID)
+        if len(parts) > 1 and not args.get('reason'):
+            args['reason'] = parts[1]
+        else:
+            args['reason'] = 'spam [fban]'
 
-        for fbchat in fban_chats:
-            bancommand = fbchat.fban_command
-            await event.client.send_message(fbchat.chat_id, f"{bancommand} {user_full.user.id} {reason}")
+        reason = args.get('reason')
+        user_full = await get_user_from_event(event, **args)
+
+        print(user_full)
+
+        #  if not user_full:
+        #      await log_message("**Failed to get information for user**\n" \
+        #                        f"Command: `{event.message.message}`")
+        #      return
+        #
+        #  if "spam" in reason:
+        #      try:
+        #          spamwatch.add_ban(user_full.user.id, reason)
+        #      except BaseException:
+        #          pass
+        #      reply_message = await event.get_reply_message()
+        #      if (event.chat_id != SPAMWATCH_CHAT_ID) and reply_message:
+        #          await reply_message.forward_to(SPAMWATCH_CHAT_ID)
+        #
+        #  for fbchat in fban_chats:
+        #      bancommand = fbchat.fban_command
+        #      await event.client.send_message(fbchat.chat_id, f"{bancommand} {user_full.user.id} {reason}")
+        #
+        #  await log_message(f"User `{user_full.user.id}` banned in {len(fban_chats)} chats.")

@@ -20,6 +20,7 @@ dnspython = "*"
 mongoengine = "*"
 photohash = "*"
 spamwatch = "*"
+telemongo = "*"
 
-[requires]
+[requests]
 python_version = "3.7"
