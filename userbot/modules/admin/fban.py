@@ -28,26 +28,28 @@ class FBanCommand(Command):
             args['reason'] = 'spam [fban]'
 
         reason = args.get('reason')
-        user_full = await get_user_from_event(event, **args)
 
-        print(user_full)
+        try:
+            user_full = await get_user_from_event(event, **args)
+        except BaseException:
+            user_full = None
 
-        #  if not user_full:
-        #      await log_message("**Failed to get information for user**\n" \
-        #                        f"Command: `{event.message.message}`")
-        #      return
-        #
-        #  if "spam" in reason:
-        #      try:
-        #          spamwatch.add_ban(user_full.user.id, reason)
-        #      except BaseException:
-        #          pass
-        #      reply_message = await event.get_reply_message()
-        #      if (event.chat_id != SPAMWATCH_CHAT_ID) and reply_message:
-        #          await reply_message.forward_to(SPAMWATCH_CHAT_ID)
-        #
-        #  for fbchat in fban_chats:
-        #      bancommand = fbchat.fban_command
-        #      await event.client.send_message(fbchat.chat_id, f"{bancommand} {user_full.user.id} {reason}")
-        #
-        #  await log_message(f"User `{user_full.user.id}` banned in {len(fban_chats)} chats.")
+        if not user_full:
+            await log_message("**Failed to get information for user**\n" \
+                              f"Command: `{event.message.message}`")
+            return
+
+        if "spam" in reason:
+            try:
+                spamwatch.add_ban(user_full.user.id, reason)
+            except BaseException:
+                pass
+            reply_message = await event.get_reply_message()
+            if (event.chat_id != SPAMWATCH_CHAT_ID) and reply_message:
+                await reply_message.forward_to(SPAMWATCH_CHAT_ID)
+
+        for fbchat in fban_chats:
+            bancommand = fbchat.fban_command
+            await event.client.send_message(fbchat.chat_id, f"{bancommand} {user_full.user.id} {reason}")
+
+        await log_message(f"User `{user_full.user.id}` banned in {len(fban_chats)} chats.")
