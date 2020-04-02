@@ -11,7 +11,10 @@ from telethon.tl.types import (PeerUser, MessageEntityMentionName, ChannelPartic
 
 from userbot import bot, LOG_CHAT_ID
 
-def parse_arguments(message: str, valid: List[str]) -> (dict, str):
+def parse_arguments(message: Union[str, None], valid: List[str]) -> (dict, str):
+    if message == None:
+        return {}, ""
+
     options = {}
 
     # Handle boolean values

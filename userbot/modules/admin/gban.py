@@ -12,12 +12,41 @@ class GBanCommand(Command):
     category = "admin"
 
     async def exec(self, event):
-        gban_chats = Chat.objects(gban_enabled=True) # pylint: disable=no-member
-        reason = event.pattern_match.groups()[0] or ""
-
-        for gbchat in gban_chats:
-            bancommand = gbchat.gban_command
-            user_full = await get_user_from_event(event)
-            await event.client.send_message(gbchat.chat_id, f"{bancommand} {user_full.user.id} {reason}")
-
         await event.delete()
+        gban_chats = Chat.objects(gban_enabled=True) # pylint: disable=no-member
+
+        args, maybe_user = parse_arguments(event.pattern_match.group(1), [ 'user', 'reason' ])
+        parts = re.split(r'\s+', maybe_user, 1)
+        args['user'] = args.get('user') or parts[0]
+
+        if len(parts) > 1 and not args.get('reason'):
+            args['reason'] = parts[1]
+        else:
+            args['reason'] = 'spam [gban]'
+
+        reason = args.get('reason')
+
+        try:
+            user_full = await get_user_from_event(event, **args)
+        except BaseException:
+            user_full = None
+
+        if not user_full:
+            await log_message("**Failed to get information for user**\n" \
+                              f"Command: `{event.message.message}`")
+            return
+
+        if "spam" in reason:
+            try:
+                spamwatch.add_ban(user_full.user.id, reason)
+            except BaseException:
+                pass
+            reply_message = await event.get_reply_message()
+            if (event.chat_id != SPAMWATCH_CHAT_ID) and reply_message:
+                await reply_message.forward_to(SPAMWATCH_CHAT_ID)
+
+        for fbchat in gban_chats:
+            bancommand = fbchat.gban_command
+            await event.client.send_message(fbchat.chat_id, f"{bancommand} {user_full.user.id} {reason}")
+
+        await log_message(f"User `{user_full.user.id}` banned in {len(gban_chats)} chats.")

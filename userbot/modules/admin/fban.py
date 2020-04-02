@@ -16,6 +16,7 @@ class FBanCommand(Command):
     category = "admin"
 
     async def exec(self, event):
+        await event.delete()
         fban_chats = Chat.objects(fban_enabled=True) # pylint: disable=no-member
 
         args, maybe_user = parse_arguments(event.pattern_match.group(1), [ 'user', 'reason' ])
