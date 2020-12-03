@@ -1,5 +1,10 @@
-from userbot.db import Chat
-from userbot.utils import get_user_from_event
+import re
+from contextlib import suppress
+
+from userbot import spamwatch
+from userbot.models.chat import Chat
+from userbot.utils import get_user_from_event, parse_arguments, log_message
+from userbot.utils.constants import SPAMWATCH_CHAT_ID
 from userbot.commands import Command, register
 
 @register
@@ -13,7 +18,7 @@ class GBanCommand(Command):
 
     async def exec(self, event):
         await event.delete()
-        gban_chats = Chat.objects(gban_enabled=True) # pylint: disable=no-member
+        gban_chats = Chat.query.filter(Chat.gbans_enabled == True).all()
 
         args, maybe_user = parse_arguments(event.pattern_match.group(1), [ 'user', 'reason' ])
         parts = re.split(r'\s+', maybe_user, 1)
@@ -29,24 +34,20 @@ class GBanCommand(Command):
         try:
             user_full = await get_user_from_event(event, **args)
         except BaseException:
-            user_full = None
-
-        if not user_full:
             await log_message("**Failed to get information for user**\n" \
                               f"Command: `{event.message.message}`")
             return
 
         if "spam" in reason:
-            try:
+            with suppress(BaseException):
                 spamwatch.add_ban(user_full.user.id, reason)
-            except BaseException:
-                pass
+
             reply_message = await event.get_reply_message()
-            if (event.chat_id != SPAMWATCH_CHAT_ID) and reply_message:
+            if (event.chat.id != SPAMWATCH_CHAT_ID) and reply_message:
                 await reply_message.forward_to(SPAMWATCH_CHAT_ID)
 
         for fbchat in gban_chats:
             bancommand = fbchat.gban_command
-            await event.client.send_message(fbchat.chat_id, f"{bancommand} {user_full.user.id} {reason}")
+            await event.client.send_message(fbchat.id, f"{bancommand} {user_full.user.id} {reason}")
 
         await log_message(f"User `{user_full.user.id}` banned in {len(gban_chats)} chats.")

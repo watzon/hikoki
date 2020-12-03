@@ -1,24 +1,26 @@
-from mongoengine import (Document, IntField, StringField, BooleanField,
-                         ReferenceField, ListField, ImageField)
+from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy.ext.declarative import declarative_base
 
-class Chat(Document):
-    chat_id = IntField(primary_key=True, required=True) # pylint: disable=invalid-name
-    title = StringField(required=True)
-    kind = StringField()
-    bot_disabled = BooleanField(default=False)
+from userbot import alchemy_engine
 
-    ban_command = StringField(default="/ban")
+Session = scoped_session(sessionmaker(bind=alchemy_engine))
+class _Base(object):
+    query = Session.query_property()
 
-    gban_enabled = BooleanField(default=False)
-    gban_command = StringField(default="/ban")
+    def save(self, commit=False):
+        Session.add(self)
+        if commit:
+            Session.commit()
 
-    fban_enabled = BooleanField(default=False)
-    fban_command = StringField(default="/fban")
+    def commit(self):
+        Session.commit()
 
-class Note(Document):
-    name = StringField(primary_key=True, required=True)
-    chat = ReferenceField('Chat')
-    content = StringField()
-    tags = ListField()
-    private = BooleanField(default=True)
-    file = StringField()
+BaseModel = declarative_base(cls=_Base)
+
+# class Note(Document):
+#     name = StringField(primary_key=True, required=True)
+#     chat = ReferenceField('Chat')
+#     content = StringField()
+#     tags = ListField()
+#     private = BooleanField(default=True)
+#     file = StringField()

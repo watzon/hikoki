@@ -1,3 +1,4 @@
+import logging
 from re import findall, match, split
 from typing import Union, List
 
@@ -173,4 +174,6 @@ def user_full_name(user):
     return full_name
 
 async def log_message(message, **kwargs):
-    return await bot.send_message(LOG_CHAT_ID, message, **kwargs)
+    logging.info(message)
+    if LOG_CHAT_ID:
+        return await bot.send_message(LOG_CHAT_ID, message, **kwargs)

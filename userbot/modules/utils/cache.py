@@ -13,11 +13,11 @@ class CacheCommand(Command):
     async def exec(self, event):
         await event.delete()
 
-        txt = f"**Caching users in chat `{event.chat_id}`**"
+        txt = f"**Caching users in chat `{event.chat.id}`**"
         message = await log_message(txt)
 
         total = 0
-        async for user in event.client.iter_participants(event.chat_id, aggressive=True):
+        async for user in event.client.iter_participants(event.chat.id, aggressive=True):
             total += 1
             if total % 100 == 0:
                 await message.edit(txt + f"\nCached {total} so far")

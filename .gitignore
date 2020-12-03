@@ -150,3 +150,5 @@ static
 
 # We don't want to store an actual docker-compose.yml, only the example one
 docker-compose.yml
+
+alembic.ini

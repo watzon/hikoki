@@ -1,7 +1,7 @@
 import re
 import difflib
 
-from userbot.db import Chat
+from userbot.models.chat import Chat
 # from userbot.utils import get_user_from_event
 from userbot import COMMAND_PREFIX
 from userbot.commands import Command, register
@@ -16,7 +16,7 @@ class config(Command):
     category = "admin"
 
     async def exec(self, event):
-        chat_id = event.chat_id
+        chat_id = event.chat.id
         params = event.pattern_match.groups()[0]
         options = ["fbans", "gbans", "bancommand", "gbancommand", "fbancommand"]
         if params:
@@ -28,70 +28,70 @@ class config(Command):
                 newvalue = params[1]
 
             if option == "bancommand":
-                bcchat = Chat.objects(chat_id=chat_id).get()
+                bcchat = Chat.query.get(chat_id)
                 if newvalue:
                     bcchat.ban_command = newvalue
-                    bcchat.save()
+                    bcchat.commit()
                     await event.reply(f"Ban command for chat `{chat_id}` set to `{newvalue}`.")
                 else:
                     ban_command = bcchat.ban_command
                     await event.reply(f"Ban command for chat `{chat_id}` is `{ban_command}`")
             elif option == "gbancommand":
-                fbchat = Chat.objects(chat_id=chat_id).get()
+                fbchat = Chat.query.get(chat_id)
                 if newvalue:
                     fbchat.gban_command = newvalue
-                    fbchat.save()
+                    fbchat.commit()
                     await event.reply(f"Gban command for chat `{chat_id}` set to `{newvalue}`.")
                 else:
                     gban_command = fbchat.gban_command
                     await event.reply(f"Gban command for chat `{chat_id}`: `{gban_command}`")
             elif option == "fbancommand":
-                fbchat = Chat.objects(chat_id=chat_id).get()
+                fbchat = Chat.query.get(chat_id)
                 if newvalue:
                     fbchat.fban_command = newvalue
-                    fbchat.save()
+                    fbchat.commit()
                     await event.reply(f"Fban command for chat `{chat_id}` set to `{newvalue}`.")
                 else:
                     fban_command = fbchat.fban_command
                     await event.reply(f"Fban command for chat `{chat_id}`: `{fban_command}`")
             elif option == "gbans":
-                fbchat = Chat.objects(chat_id=chat_id).get()
+                fbchat = Chat.query.get(chat_id)
                 if newvalue:
                     boolean = self.str_to_bool(newvalue)
                     if boolean is None:
                         return await event.reply(f"Invalid value `{newvalue}` for option `gbans`.")
-                    fbchat.gban_enabled = boolean
-                    fbchat.save()
+                    fbchat.gbans_enabled = boolean
+                    fbchat.commit()
                     status = "enabled" if boolean else "disabled"
                     await event.reply(f"Gbans `{status}` for chat `{chat_id}`.")
                 else:
-                    status = "enabled" if fbchat.fban_enabled else "disabled"
+                    status = "enabled" if fbchat.fbans_enabled else "disabled"
                     await event.reply(f"Gbans are `{status}` for chat `{chat_id}`.")
             elif option == "fbans":
-                fbchat = Chat.objects(chat_id=chat_id).get()
+                fbchat = Chat.query.get(chat_id)
                 if newvalue:
                     boolean = self.str_to_bool(newvalue)
                     if boolean is None:
                         return await event.reply(f"Invalid value `{newvalue}` for option `fbans`.")
-                    fbchat.fban_enabled = boolean
-                    fbchat.save()
+                    fbchat.fbans_enabled = boolean
+                    fbchat.commit()
                     status = "enabled" if boolean else "disabled"
                     await event.reply(f"Fbans `{status}` for chat `{chat_id}`.")
                 else:
-                    status = "enabled" if fbchat.fban_enabled else "disabled"
+                    status = "enabled" if fbchat.fbans_enabled else "disabled"
                     await event.reply(f"Fbans are `{status}` for chat `{chat_id}`.")
             elif option == "blacklist":
-                echat = Chat.objects(chat_id=chat_id).get()
+                echat = Chat.query.get(chat_id)
                 if newvalue:
                     boolean = self.str_to_bool(newvalue)
                     if boolean is None:
                         return await event.reply(f"Invalid value `{newvalue}` for option `blacklist`.")
                     echat.bot_enabled = boolean
-                    echat.save()
+                    echat.commit()
                     status = "enabled" if boolean else "disabled"
                     await event.reply(f"Bot `{status}` for chat `{chat_id}`.")
                 else:
-                    status = "enabled" if echat.fban_enabled else "disabled"
+                    status = "enabled" if echat.fbans_enabled else "disabled"
                     await event.reply(f"Bot is currenty `{status}` in chat `{chat_id}`.")
             else:
                 close = difflib.get_close_matches(option, options)

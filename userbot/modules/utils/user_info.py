@@ -5,7 +5,7 @@ from telethon.tl.types import User, MessageEntityMention, MessageEntityMentionNa
 from telethon import TelegramClient
 
 from userbot import spamwatch
-from userbot.utils import parsers, helpers, constants
+from userbot.utils import helpers, constants, parse_arguments
 from userbot.utils.mdtex import MDTeXDocument, Section, SubSection, KeyValueItem, Bold, Code, Link
 from userbot.commands import Command, register
 
@@ -21,21 +21,22 @@ class UserInfoCommand(Command):
 
     async def exec(self, event):
         msg: Message = event.message
-        _args = msg.raw_text.split()[1:]
-        keyword_args, args = parsers.parse_arguments(' '.join(_args))
-        response = ''
-        if not args and msg.is_reply:
-            response = await self._info_from_reply(event, **keyword_args)
-        elif args or 'search' in keyword_args:
-            response = await self._info_from_arguments(event)
+        args, user = parse_arguments(event.pattern_match.group(1), ['id', 'all', 'general', 'bot', 'misc', 'search'])
+        response = None
+
+        if user:
+            response = await self._info_from_user(event, **args)
+        elif msg.is_reply:
+            response = await self._info_from_reply(event, **args)
+
         if response:
             await event.respond(str(response))
 
-    async def _info_from_arguments(self, event) -> MDTeXDocument:
+    async def _info_from_user(self, event, **kwargs) -> MDTeXDocument:
         msg: Message = event.message
         client: TelegramClient = event.client
         keyword_args, args = await helpers.get_args(event)
-        search_name = keyword_args.get('search', False)
+        search_name = kwargs.get('search', False)
         if search_name:
             entities = [search_name]
         else:

@@ -3,52 +3,68 @@
 import sys
 import signal
 import logging
+from contextlib import suppress
 from importlib import import_module
 
-from mongoengine import DoesNotExist
-
+import telethon.tl.types
 from telethon import events
-from telethon.tl.types import InputPeerChannel, InputPeerChat, PeerChannel, PeerChat, UpdateNewMessage
 from telethon.errors.rpcerrorlist import PhoneNumberInvalidError
 from telethon.tl.functions.channels import GetFullChannelRequest
 from telethon.tl.functions.messages import GetFullChatRequest
 
-from userbot.db import Chat
-from userbot.commands import Command
+from userbot.models import User, Chat
+# from userbot.commands import Command
 from userbot import bot, LOG_CHAT_ID
 from userbot.modules import ALL_MODULES
 from userbot.messages import INVALID_PHONE, BOT_RESTARTED
 
-def signal_handler(sig, frame):
+def signal_handler(_sig, _frame):
     print('You pressed Ctrl+C! Exiting...')
     sys.exit(0)
 
-async def update_chat(update):
-    if isinstance(update.to_id, PeerChannel):
-        to_id = update.to_id.channel_id
-        to_id = int(f"-100{to_id}")
-    elif isinstance(update.to_id, PeerChat):
-        to_id = update.to_id.chat_id
-    else: return
+async def cache_entities(update):
+    user_id = None
+    channel_id = getattr(update, 'channel_id', None)
+    message = getattr(update, 'message', None)
+    if not channel_id and message:
+        channel_id = message.peer_id.channel_id if message.peer_id else None
+        user_id = message.from_id.user_id if message.from_id else None
 
-    try:
-        Chat.objects(chat_id=to_id).get()
-    except DoesNotExist:
-        input_entity = await bot.get_input_entity(to_id)
+    if channel_id:
+        with suppress(ValueError):
+            channel = await bot.get_entity(channel_id)
+            kind = "group"
+            if channel.megagroup: kind = "megagroup"
+            else: kind = "channel"
 
-        if isinstance(input_entity, InputPeerChannel):
-            ent = await bot(GetFullChannelRequest(input_entity.channel_id))
-        elif isinstance(input_entity, InputPeerChat):
-            ent = await bot(GetFullChatRequest(input_entity.chat_id))
-        else: return
+            record = Chat.query.get(channel_id)
+            if record:
+                record.title = channel.title
+                record.kind = kind
+                record.is_admin = bool(channel.admin_rights)
+                record.commit()
+            else:
+                record = Chat(id=channel_id, title=channel.title, kind=kind, is_admin=bool(channel.admin_rights))
+                record.save()
 
-        for chat in ent.chats:
-            try:
-                id = int(f"-100{chat.id}")
-                Chat(chat_id=id, title=chat.title).save()
-                logging.debug("Saved new chat with id %d.", id)
-            except BaseException:
-                pass
+    if user_id:
+        with suppress(ValueError):
+            user = await bot.get_entity(user_id)
+            record = User.query.get(user_id)
+            if record:
+                record.first_name = user.first_name
+                record.last_name = user.last_name
+                record.username = user.username
+                record.restricted = user.restricted
+                record.restriction_reason = user.restriction_reason
+                record.lang_code = user.lang_code
+                record.commit()
+            else:
+                record = User(id=user_id, first_name=user.first_name,
+                    last_name=user.last_name, username=user.username,
+                    restricted=user.restricted, restriction_reason=user.restriction_reason,
+                    lang_code=user.lang_code)
+                record.save()
 
 async def main():
     try:
@@ -63,7 +79,7 @@ async def main():
     logging.info("Your bot lives! You can validate this by running the .alive command.")
 
     # Keep track of chats
-    bot.add_event_handler(update_chat, events.NewMessage)
+    bot.add_event_handler(cache_entities, events.Raw)
 
     # Tell the user the bot has been restarted
     if LOG_CHAT_ID:

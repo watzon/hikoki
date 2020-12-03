@@ -1,5 +1,7 @@
-from userbot.db import Chat
-from userbot.utils import get_user_from_event
+import re
+
+from userbot.models.chat import Chat
+from userbot.utils import get_user_from_event, parse_arguments, log_message
 from userbot.commands import Command, register
 
 @register
@@ -14,7 +16,7 @@ class BanCommand(Command):
     async def exec(self, event):
         await event.delete()
 
-        dbchat = Chat.objects(chat_id=event.chat_id).get() # pylint: disable=no-member
+        dbchat = Chat.query.get(event.chat.id)
         bancommand = dbchat.ban_command
         args, maybe_user = parse_arguments(event.pattern_match.group(1), [ 'user', 'reason' ])
         parts = re.split(r'\s+', maybe_user, 1)
@@ -30,9 +32,6 @@ class BanCommand(Command):
         try:
             user_full = await get_user_from_event(event, **args)
         except BaseException:
-            user_full = None
-
-        if not user_full:
             await log_message("**Failed to get information for user**\n" \
                               f"Command: `{event.message.message}`")
             return

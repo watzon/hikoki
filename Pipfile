@@ -7,6 +7,7 @@ verify_ssl = true
 python-dotenv = ">=0.12.0"
 pylint = "*"
 autopep8 = "*"
+pylint-sqlalchemy = "*"
 
 [packages]
 cryptg = ">=0.2"
@@ -17,10 +18,13 @@ Pillow = ">=7.0.0"
 coloredlogs = "*"
 pymongo = "*"
 dnspython = "*"
-mongoengine = "*"
 photohash = "*"
 spamwatch = "*"
-telemongo = "*"
+sqlalchemy = "*"
+psycopg2 = "*"
+alembic = "*"
+telethon-session-sqlalchemy = "*"
+gitpython = "*"
 
 [requests]
 python_version = "3.7"

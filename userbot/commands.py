@@ -11,7 +11,7 @@ from telethon.events import NewMessage, MessageEdited
 from telethon.tl.custom.message import Message
 
 from userbot import bot, LOG_CHAT_ID, COMMAND_PREFIX
-from userbot.db import Chat
+from userbot.models.chat import Chat
 
 class Command(ABC):
     """This is the base `Command` class for other commands
@@ -100,8 +100,8 @@ def register(cls: Command.__class__):
 
     async def decorator(check: Message):
         # pylint: disable=no-member
-        db_chat = Chat.objects(chat_id=check.chat_id).first()
-        if db_chat and db_chat.bot_disabled and not cls.disable_override:
+        db_chat = Chat.query.get(check.chat.id)
+        if db_chat and not db_chat.bot_enabled and not cls.disable_override:
             return
 
         if cls.group_only and not check.is_group():

@@ -7,7 +7,7 @@ Hikōki is a Telegram userbot meant for group management, spam handling, and occ
 
 * Python 3
 * pipenv (`pip3 install pipenv`)
-* Server running MongoDB
+* Some kind of SQL database
 
 Optionally:
 
@@ -28,7 +28,7 @@ Optionally:
     pipenv install
     ```
 
-3. Put necessary environment variables into your `.env` file or save them to your local environment. You can ignore `SESSION` for now, but you will need `API_ID` and `API_HASH` which you can get from [my.telegram.org](https://my.telegram.org), and the database information. For more information on the environement variables see below.
+3. Put necessary environment variables into your `.env` file or save them to your local environment. You can ignore `SESSION` for now, but you will need `API_ID` and `API_HASH` which you can get from [my.telegram.org](https://my.telegram.org), and the database information. For more information on the environement variables see below. You will also need to copy `alembic.ini.example` to `alembic.ini` and set the database url there.
 
 4. Sign in with Telegram and generate a session string. We use Telethon's `StringSession` because it's easier to maintain outside of a docker container, and then load in as an environment variable.
 
@@ -36,33 +36,17 @@ Optionally:
     pipenv run python3 scripts/authorize.py
     ```
 
-5. For running locally save the generated session string to your `.env` file, otherwise save it as an environment variable.
+5. Set up the database
+
+    ```
+    alembic upgrade head
+    ```
 
 6. Run the start script.
 
     ```
     bin/bot
     ```
-
-## Docker / Podman
-
-If you have docker or podman installed the process becomes much easier. You'll still need the environment variables, but once you have them loaded you can just run:
-
-```
-docker build -t hikoki .
-# or
-podman build -t hikoki .
-```
-
-and then
-
-```
-docker run hikoki
-#or
-podman run hikoki
-```
-
-Alternately you can set up a docker-compose like [this](./docker-compose.example.yml).
 
 ## Environment
 
@@ -98,26 +82,8 @@ The host to use for the [SpamWatch](https://spamwat.ch) API.
 
 API key for SpamWatch.
 
-### MONGO_DB
+### `DB_URL`
+The fully qualified url of your database.
 
-The name of the mongo database to use for session storage and storing other things.
-
-### MONGO_USER
-
-The name of the user to sign into mongo as.
-
-### MONGO_PASS
-
-The password for the mongo user. Right now there's no way to authenticate without a password.
-
-### MONGO_HOST
-
-The host for the mongo instance. If you're running locally this would probably be `127.0.0.1`
-
-### MONGO_PORT
-
-The port for the mongo instance.
-
-### MONGO_AUTH_DB
-
-If enabled, you may need to include an `authSource` parameter for your connection. Set this to the auth db.
+### `REPO_URL`
+The url for your github repo.
