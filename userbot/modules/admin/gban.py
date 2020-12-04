@@ -2,7 +2,7 @@ import re
 from contextlib import suppress
 
 from userbot import spamwatch
-from userbot.models.chat import Chat
+from userbot.models import Chat, User
 from userbot.utils import get_user_from_event, parse_arguments, log_message
 from userbot.utils.constants import SPAMWATCH_CHAT_ID
 from userbot.commands import Command, register
@@ -38,12 +38,18 @@ class GBanCommand(Command):
                               f"Command: `{event.message.message}`")
             return
 
+        usermodel = User.query.get(user_full.id)
+        if usermodel:
+            usermodel.gbanned = True
+            usermodel.gban_reason = reason
+            usermodel.commit()
+
         if "spam" in reason:
             with suppress(BaseException):
                 spamwatch.add_ban(user_full.user.id, reason)
 
             reply_message = await event.get_reply_message()
-            if (event.chat.id != SPAMWATCH_CHAT_ID) and reply_message:
+            if (event.chat_id != SPAMWATCH_CHAT_ID) and reply_message:
                 await reply_message.forward_to(SPAMWATCH_CHAT_ID)
 
         for fbchat in gban_chats:

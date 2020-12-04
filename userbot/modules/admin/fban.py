@@ -42,7 +42,7 @@ class FBanCommand(Command):
             except BaseException:
                 pass
             reply_message = await event.get_reply_message()
-            if (event.chat.id != SPAMWATCH_CHAT_ID) and reply_message:
+            if (event.chat_id != SPAMWATCH_CHAT_ID) and reply_message:
                 await reply_message.forward_to(SPAMWATCH_CHAT_ID)
 
         for fbchat in fban_chats:

@@ -98,7 +98,7 @@ def register(cls: Command.__class__):
     pattern = cls.command_pattern()
     args = {'pattern': pattern, 'incoming': cls.incoming}
 
-    async def decorator(check: Message):
+    async def decorator(check: NewMessage):
         # pylint: disable=no-member
         db_chat = Chat.query.get(check.chat.id)
         if db_chat and not db_chat.bot_enabled and not cls.disable_override:

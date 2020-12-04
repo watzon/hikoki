@@ -25,6 +25,7 @@ psycopg2 = "*"
 alembic = "*"
 telethon-session-sqlalchemy = "*"
 gitpython = "*"
+pylint = "*"
 
 [requests]
-python_version = "3.7"
+python_version = "3.8"

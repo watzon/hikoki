@@ -6,7 +6,7 @@ import logging
 from contextlib import suppress
 from importlib import import_module
 
-import telethon.tl.types
+from telethon.tl.types import PeerUser
 from telethon import events
 from telethon.errors.rpcerrorlist import PhoneNumberInvalidError
 from telethon.tl.functions.channels import GetFullChannelRequest
@@ -27,44 +27,57 @@ async def cache_entities(update):
     channel_id = getattr(update, 'channel_id', None)
     message = getattr(update, 'message', None)
     if not channel_id and message:
-        channel_id = message.peer_id.channel_id if message.peer_id else None
-        user_id = message.from_id.user_id if message.from_id else None
+        if getattr(message, 'peer_id', None):
+            if isinstance(message.peer_id, PeerUser):
+                user_id = message.peer_id.user_id
+            else:
+                channel_id = message.peer_id.channel_id
+        elif getattr(message, 'from_id', None):
+            user_id = message.from_id.user_id
 
     if channel_id:
         with suppress(ValueError):
-            channel = await bot.get_entity(channel_id)
-            kind = "group"
-            if channel.megagroup: kind = "megagroup"
-            else: kind = "channel"
+            channel = None
+            with suppress(TypeError):
+                channel = await bot.get_entity(channel_id)
 
-            record = Chat.query.get(channel_id)
-            if record:
-                record.title = channel.title
-                record.kind = kind
-                record.is_admin = bool(channel.admin_rights)
-                record.commit()
-            else:
-                record = Chat(id=channel_id, title=channel.title, kind=kind, is_admin=bool(channel.admin_rights))
-                record.save()
+            if channel:
+                kind = "group"
+                if channel.megagroup: kind = "megagroup"
+                else: kind = "channel"
+
+                record = Chat.query.get(channel_id)
+                if record:
+                    record.title = channel.title
+                    record.kind = kind
+                    record.is_admin = bool(channel.admin_rights)
+                    record.commit()
+                else:
+                    record = Chat(id=channel_id, title=channel.title, kind=kind, is_admin=bool(channel.admin_rights))
+                    record.save()
 
     if user_id:
         with suppress(ValueError):
-            user = await bot.get_entity(user_id)
-            record = User.query.get(user_id)
-            if record:
-                record.first_name = user.first_name
-                record.last_name = user.last_name
-                record.username = user.username
-                record.restricted = user.restricted
-                record.restriction_reason = user.restriction_reason
-                record.lang_code = user.lang_code
-                record.commit()
-            else:
-                record = User(id=user_id, first_name=user.first_name,
-                    last_name=user.last_name, username=user.username,
-                    restricted=user.restricted, restriction_reason=user.restriction_reason,
-                    lang_code=user.lang_code)
-                record.save()
+            user = None
+            with suppress(TypeError):
+                user = await bot.get_entity(user_id)
+
+            if user:
+                record = User.query.get(user_id)
+                if record:
+                    record.first_name = user.first_name
+                    record.last_name = user.last_name
+                    record.username = user.username
+                    record.restricted = user.restricted
+                    record.restriction_reason = user.restriction_reason
+                    record.lang_code = user.lang_code
+                    record.commit()
+                else:
+                    record = User(id=user_id, first_name=user.first_name,
+                        last_name=user.last_name, username=user.username,
+                        restricted=user.restricted, restriction_reason=user.restriction_reason,
+                        lang_code=user.lang_code)
+                    record.save()
 
 async def main():
     try:

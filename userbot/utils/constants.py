@@ -1,6 +1,6 @@
 from telethon.errors import UsernameInvalidError, UsernameNotOccupiedError, InviteHashInvalidError
 
-SPAMWATCH_CHAT_ID = -1001312712379
+SPAMWATCH_CHAT_ID = -1001275988180
 
 TELEGRAM_DOMAINS = ['t.me',
                     'telegram.org',

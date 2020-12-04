@@ -89,16 +89,17 @@ class Item(FormattedBase):
 class Section:
     """A section header"""
 
-    def __init__(self, *args: Union[V, 'SubSection'], indent: int = 4) -> None:
+    def __init__(self, *args: Union[V, 'SubSection'], spacing: int = 1, indent: int = 4) -> None:
         self.header = Bold(args[0])
         self.items = [i for i in args[1:] if i]
+        self.spacing = spacing
         self.indent = indent
 
     def __add__(self, other: Union[V, 'Section']) -> 'MDTeXDocument':
         return MDTeXDocument(self, *other)
 
     def __str__(self) -> str:
-        return '\n'.join([str(self.header)]
+        return ('\n' * self.spacing).join([str(self.header)]
                          + [' ' * self.indent + str(item) for item in self.items
                             if item is not None])
 

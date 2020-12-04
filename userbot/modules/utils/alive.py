@@ -6,7 +6,7 @@ import telethon
 import sqlalchemy
 from platform import python_version
 
-from userbot import bot
+from userbot import bot, BOT_NAME
 from userbot.utils.mdtex import MDTeXDocument, Section, KeyValueItem, Bold, Link
 from userbot.modules import ALL_MODULES
 from userbot.commands import Command, register
@@ -27,7 +27,7 @@ class AliveCommand(Command):
 
         message = MDTeXDocument(
             Section(
-                Bold("Hikōki"),
+                Bold(BOT_NAME),
                 KeyValueItem(Bold("version"), "0.2.0"),
                 KeyValueItem(Bold("git hash"), sha[0:7]),
                 KeyValueItem(Bold("repo url"), Link(repo_short, repo_url)),

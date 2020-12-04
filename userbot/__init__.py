@@ -15,6 +15,7 @@ try:
 except BaseException:
     pass
 
+BOT_NAME = env.get("BOT_NAME", "Hikōki")
 DB_URL = env.get("DB_URL", None)
 API_ID = env.get("API_ID", None)
 API_HASH = env.get("API_HASH", None)
